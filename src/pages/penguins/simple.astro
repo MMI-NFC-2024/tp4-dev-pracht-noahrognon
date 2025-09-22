@@ -1,0 +1,66 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="space-y-6">
+    <header class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Penguins</p>
+      <h1 class="text-3xl font-semibold text-white">Scatter simple</h1>
+      <p class="max-w-2xl text-sm text-slate-300">
+        Reprise directe de l'exemple Observable Plot pour afficher la longueur et la profondeur
+        du bec des manchots selon l'espece.
+      </p>
+    </header>
+
+    <div class="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6">
+      <div class="overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <div id="penguins-plot" class="h-[440px] w-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import * as Plot from "@observablehq/plot";
+    import penguins from "../../assets/penguins.json";
+
+    const container = document.querySelector("#penguins-plot");
+
+    function render() {
+      const width = container.clientWidth || 900;
+      const plot = Plot.plot({
+        width,
+        height: 420,
+        grid: true,
+        color: {
+          legend: true,
+          label: "Espece"
+        },
+        marks: [
+          Plot.dot(penguins, {
+            x: "culmen_length_mm",
+            y: "culmen_depth_mm",
+            stroke: "species",
+            title: (d) => `${d.species} (L: ${d.culmen_length_mm} mm / P: ${d.culmen_depth_mm} mm)`
+          })
+        ],
+        x: {
+          label: "Longueur du bec (mm)"
+        },
+        y: {
+          label: "Profondeur du bec (mm)"
+        }
+      });
+
+      container.replaceChildren(plot);
+    }
+
+    render();
+
+    let resizeId;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(render, 200);
+    });
+  </script>
+</Layout>

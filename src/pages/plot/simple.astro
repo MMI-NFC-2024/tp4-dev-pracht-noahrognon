@@ -1,0 +1,72 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="space-y-6">
+    <header class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Observable Plot</p>
+      <h1 class="text-3xl font-semibold text-white">Exemple simple</h1>
+      <p class="max-w-2xl text-sm text-slate-300">
+        Variante Astro de "Plot in vanilla HTML" en important la librairie via npm au lieu du CDN.
+      </p>
+    </header>
+
+    <div class="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6">
+      <div class="overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <div id="simple-plot" class="h-[420px] w-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import * as Plot from "@observablehq/plot";
+
+    const dataset = [
+      { categorie: "A", valeur: 28 },
+      { categorie: "B", valeur: 16 },
+      { categorie: "C", valeur: 22 },
+      { categorie: "D", valeur: 35 },
+      { categorie: "E", valeur: 18 },
+      { categorie: "F", valeur: 12 }
+    ];
+
+    const container = document.querySelector("#simple-plot");
+
+    function render() {
+      const width = container.clientWidth || 900;
+      const plot = Plot.plot({
+        width,
+        height: 400,
+        y: {
+          grid: true,
+          label: "Valeur"
+        },
+        x: {
+          label: "Categorie"
+        },
+        color: {
+          scheme: "turbo"
+        },
+        marks: [
+          Plot.ruleY([0]),
+          Plot.barY(dataset, {
+            x: "categorie",
+            y: "valeur",
+            fill: "categorie"
+          })
+        ]
+      });
+
+      container.replaceChildren(plot);
+    }
+
+    render();
+
+    let resizeId;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(render, 200);
+    });
+  </script>
+</Layout>

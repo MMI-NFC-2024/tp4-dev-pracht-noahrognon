@@ -1,0 +1,143 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="space-y-6">
+    <header class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Cars</p>
+      <h1 class="text-3xl font-semibold text-white">Consommation vs puissance</h1>
+      <p class="max-w-3xl text-sm text-slate-300">
+        Explore la relation entre la puissance (hp), la consommation (mpg) et le poids des
+        vehicules. Filtre par nombre de cylindres et par annee maximale.
+      </p>
+    </header>
+
+    <div class="space-y-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6">
+      <div class="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+        <label class="text-sm font-medium text-slate-200">
+          Cylindres
+          <select
+            id="cars-cylinders"
+            class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none"
+          >
+            <option value="">Tous</option>
+          </select>
+        </label>
+
+        <label class="text-sm font-medium text-slate-200">
+          Annee max : <span id="cars-year-value" class="font-semibold text-sky-300"></span>
+          <input
+            id="cars-year"
+            type="range"
+            min="70"
+            max="82"
+            value="82"
+            class="mt-2 w-full"
+          />
+        </label>
+      </div>
+
+      <p id="cars-summary" class="text-xs uppercase tracking-widest text-slate-400"></p>
+
+      <div class="overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <div id="cars-plot" class="h-[460px] w-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import * as Plot from "@observablehq/plot";
+    import carsData from "../../assets/cars.json";
+
+    const selectCylinders = document.querySelector("#cars-cylinders");
+    const yearInput = document.querySelector("#cars-year");
+    const yearValue = document.querySelector("#cars-year-value");
+    const summary = document.querySelector("#cars-summary");
+    const container = document.querySelector("#cars-plot");
+
+    const cars = carsData
+      .filter((car) => car["power (hp)"] !== null && car["economy (mpg)"] !== null)
+      .map((car) => ({
+        ...car,
+        yearFull: 1900 + car.year,
+        power: car["power (hp)"],
+        economy: car["economy (mpg)"],
+        weight: car["weight (lb)"],
+        acceleration: car["0-60 mph (s)"]
+      }));
+
+    const uniqueCylinders = Array.from(new Set(cars.map((car) => car.cylinders))).sort((a, b) => a - b);
+
+    for (const value of uniqueCylinders) {
+      const option = document.createElement("option");
+      option.value = String(value);
+      option.textContent = `${value} cylindres`;
+      selectCylinders.append(option);
+    }
+
+    function applyFilters() {
+      const maxYear = Number(yearInput.value);
+      const cylinderValue = selectCylinders.value ? Number(selectCylinders.value) : null;
+
+      return cars.filter((car) => {
+        if (car.year > maxYear) return false;
+        if (cylinderValue && car.cylinders !== cylinderValue) return false;
+        return true;
+      });
+    }
+
+    function updateSummary(count) {
+      const total = cars.length;
+      summary.textContent = `${count} voitures sur ${total} affichees`;
+      yearValue.textContent = `${1900 + Number(yearInput.value)}`;
+    }
+
+    function render() {
+      const filtered = applyFilters();
+      const width = container.clientWidth || 900;
+
+      const plot = Plot.plot({
+        width,
+        height: 440,
+        grid: true,
+        marks: [
+          Plot.dot(filtered, {
+            x: (car) => car.power,
+            y: (car) => car.economy,
+            stroke: (car) => car.cylinders,
+            r: (car) => Math.max(4, car.weight / 900),
+            title: (car) =>
+              `${car.name}\n${car.yearFull} - ${car.cylinders} cylindres\n${car.power} hp | ${car.economy} mpg\nPoids: ${car.weight} lb | 0-60: ${car.acceleration}s`,
+            tip: true
+          })
+        ],
+        color: {
+          scheme: "tableau10",
+          legend: true,
+          label: "Cylindres"
+        },
+        x: {
+          label: "Puissance (hp)"
+        },
+        y: {
+          label: "Consommation (mpg)"
+        }
+      });
+
+      container.replaceChildren(plot);
+      updateSummary(filtered.length);
+    }
+
+    selectCylinders.addEventListener("change", render);
+    yearInput.addEventListener("input", render);
+
+    render();
+
+    let resizeId;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(render, 200);
+    });
+  </script>
+</Layout>

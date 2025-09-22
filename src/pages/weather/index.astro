@@ -1,0 +1,199 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="space-y-6">
+    <header class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Weather</p>
+      <h1 class="text-3xl font-semibold text-white">Chronologie meteo</h1>
+      <p class="max-w-3xl text-sm text-slate-300">
+        Explore les observations quotidiennes: temperature, vent et precipitations. Utilise les
+        filtres pour isoler un type de temps, un mois ou une intensite de pluie.
+      </p>
+    </header>
+
+    <div class="space-y-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6">
+      <div class="grid gap-4 md:grid-cols-3">
+        <label class="text-sm font-medium text-slate-200">
+          Type de temps
+          <select
+            id="weather-type"
+            class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none"
+          >
+            <option value="">Tous</option>
+          </select>
+        </label>
+
+        <label class="text-sm font-medium text-slate-200">
+          Mois maximum
+          <span id="weather-month-value" class="ml-2 text-xs uppercase tracking-wide text-sky-400"></span>
+          <input id="weather-month" type="range" class="mt-2 w-full" />
+        </label>
+
+        <label class="text-sm font-medium text-slate-200">
+          Pluie maximale
+          <span id="weather-precip-value" class="ml-2 text-xs uppercase tracking-wide text-sky-400"></span>
+          <input id="weather-precip" type="range" class="mt-2 w-full" />
+        </label>
+      </div>
+
+      <p id="weather-summary" class="text-xs uppercase tracking-widest text-slate-400"></p>
+
+      <div class="overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <div id="weather-plot" class="h-[460px] w-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import * as Plot from "@observablehq/plot";
+    import weatherData from "../../assets/weather.json";
+
+    const weatherSelect = document.querySelector("#weather-type");
+    const monthInput = document.querySelector("#weather-month");
+    const monthValue = document.querySelector("#weather-month-value");
+    const precipInput = document.querySelector("#weather-precip");
+    const precipValue = document.querySelector("#weather-precip-value");
+    const summary = document.querySelector("#weather-summary");
+    const container = document.querySelector("#weather-plot");
+
+    const monthNames = ["Jan", "Fev", "Mar", "Avr", "Mai", "Jun", "Jul", "Aou", "Sep", "Oct", "Nov", "Dec"];
+    const pad = (value) => String(value).padStart(2, "0");
+
+    const dataset = weatherData
+      .map((record) => {
+        const dateObj = new Date(record.date);
+        return {
+          ...record,
+          dateObj,
+          month: dateObj.getUTCMonth() + 1,
+          isoDate: `${dateObj.getUTCFullYear()}-${pad(dateObj.getUTCMonth() + 1)}-${pad(dateObj.getUTCDate())}`
+        };
+      })
+      .sort((a, b) => a.dateObj - b.dateObj);
+
+    const weatherTypes = Array.from(new Set(dataset.map((d) => d.weather))).sort();
+    for (const type of weatherTypes) {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      weatherSelect.append(option);
+    }
+
+    const maxMonth = Math.max(...dataset.map((d) => d.month));
+    monthInput.min = "1";
+    monthInput.max = String(maxMonth);
+    monthInput.step = "1";
+    monthInput.value = String(maxMonth);
+
+    const maxPrecip = Math.ceil(Math.max(...dataset.map((d) => d.precipitation)));
+    precipInput.min = "0";
+    precipInput.max = String(maxPrecip);
+    precipInput.step = "1";
+    precipInput.value = String(maxPrecip);
+
+    function updateControls() {
+      const monthIdx = Math.max(0, Number(monthInput.value) - 1);
+      monthValue.textContent = `Jan -> ${monthNames[Math.min(monthIdx, monthNames.length - 1)]}`;
+      precipValue.textContent = `${precipInput.value} mm`;
+    }
+
+    function applyFilters() {
+      const type = weatherSelect.value;
+      const monthLimit = Number(monthInput.value);
+      const precipLimit = Number(precipInput.value);
+
+      return dataset.filter((record) => {
+        if (type && record.weather !== type) return false;
+        if (monthLimit && record.month > monthLimit) return false;
+        if (!Number.isNaN(precipLimit) && record.precipitation > precipLimit) return false;
+        return true;
+      });
+    }
+
+    function updateSummary(filtered) {
+      if (!filtered.length) {
+        summary.textContent = "Aucun jour selectionne";
+        return;
+      }
+
+      const first = filtered[0];
+      const last = filtered[filtered.length - 1];
+      const avgMax = filtered.reduce((sum, entry) => sum + entry.temp_max, 0) / filtered.length;
+      summary.textContent = `${filtered.length} jours affiches | plage: ${first.isoDate} -> ${last.isoDate} | temp max moyenne: ${avgMax.toFixed(1)} degC`;
+    }
+
+    function render() {
+      const filtered = applyFilters();
+      updateControls();
+
+      const width = container.clientWidth || 900;
+
+      const plot = Plot.plot({
+        width,
+        height: 440,
+        grid: true,
+        marginLeft: 60,
+        x: {
+          label: "Date",
+          type: "utc"
+        },
+        y: {
+          label: "Temperature (degC)"
+        },
+        color: {
+          legend: true,
+          label: "Type de temps"
+        },
+        marks: [
+          Plot.ruleY([0]),
+          Plot.areaY(filtered, {
+            x: "dateObj",
+            y1: "temp_min",
+            y2: "temp_max",
+            fill: "#1d4ed8",
+            fillOpacity: 0.12
+          }),
+          Plot.line(filtered, {
+            x: "dateObj",
+            y: "temp_max",
+            stroke: "#38bdf8",
+            strokeWidth: 2
+          }),
+          Plot.line(filtered, {
+            x: "dateObj",
+            y: "temp_min",
+            stroke: "#f97316",
+            strokeWidth: 2
+          }),
+          Plot.dot(filtered, {
+            x: "dateObj",
+            y: "temp_max",
+            stroke: "weather",
+            fill: "weather",
+            r: (d) => Math.max(4, d.wind * 1.2),
+            title: (d) =>
+              `${d.isoDate} - ${d.location}\nTemps: ${d.weather}\nTemp max: ${d.temp_max} degC\nTemp min: ${d.temp_min} degC\nPrecipitations: ${d.precipitation} mm\nVent: ${d.wind} m/s`,
+            tip: true
+          })
+        ]
+      });
+
+      container.replaceChildren(plot);
+      updateSummary(filtered);
+    }
+
+    weatherSelect.addEventListener("change", render);
+    monthInput.addEventListener("input", render);
+    precipInput.addEventListener("input", render);
+
+    render();
+
+    let resizeId;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(render, 200);
+    });
+  </script>
+</Layout>

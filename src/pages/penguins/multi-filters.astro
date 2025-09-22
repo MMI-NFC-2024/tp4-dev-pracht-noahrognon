@@ -1,0 +1,140 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="space-y-6">
+    <header class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Penguins</p>
+      <h1 class="text-3xl font-semibold text-white">Filtres multiples</h1>
+      <p class="max-w-2xl text-sm text-slate-300">
+        Combine des filtres sur l'espece, l'ile et le sexe pour affiner la lecture du dataset.
+      </p>
+    </header>
+
+    <div class="space-y-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6">
+      <div class="grid gap-4 md:grid-cols-3">
+        <label class="text-sm font-medium text-slate-200">
+          Espece
+          <select
+            id="species-multi"
+            class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none"
+          >
+            <option value="">Toutes</option>
+            <option value="Adelie">Adelie</option>
+            <option value="Chinstrap">Chinstrap</option>
+            <option value="Gentoo">Gentoo</option>
+          </select>
+        </label>
+
+        <label class="text-sm font-medium text-slate-200">
+          Ile
+          <select
+            id="island-multi"
+            class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none"
+          >
+            <option value="">Toutes</option>
+            <option value="Biscoe">Biscoe</option>
+            <option value="Dream">Dream</option>
+            <option value="Torgersen">Torgersen</option>
+          </select>
+        </label>
+
+        <label class="text-sm font-medium text-slate-200">
+          Sexe
+          <select
+            id="sex-multi"
+            class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none"
+          >
+            <option value="">Tous</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="penguins-summary" class="text-xs uppercase tracking-widest text-slate-400"></p>
+
+      <div class="overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <div id="penguins-multi-plot" class="h-[440px] w-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import * as Plot from "@observablehq/plot";
+    import penguins from "../../assets/penguins.json";
+
+    const container = document.querySelector("#penguins-multi-plot");
+    const selectSpecies = document.querySelector("#species-multi");
+    const selectIsland = document.querySelector("#island-multi");
+    const selectSex = document.querySelector("#sex-multi");
+    const summary = document.querySelector("#penguins-summary");
+
+    function applyFilters() {
+      const species = selectSpecies.value;
+      const island = selectIsland.value;
+      const sex = selectSex.value;
+
+      return penguins.filter((record) => {
+        if (species && record.species !== species) return false;
+        if (island && record.island !== island) return false;
+        if (sex && record.sex !== sex) return false;
+        return true;
+      });
+    }
+
+    function updateSummary(count) {
+      const total = penguins.length;
+      const percentage = total ? Math.round((count / total) * 100) : 0;
+      summary.textContent = `${count} individus correspondants (${percentage}% du dataset)`;
+    }
+
+    function render() {
+      const filtered = applyFilters();
+      const width = container.clientWidth || 900;
+
+      const plot = Plot.plot({
+        width,
+        height: 420,
+        grid: true,
+        color: {
+          legend: true,
+          label: "Espece"
+        },
+        marks: [
+          Plot.dot(filtered, {
+            x: "culmen_length_mm",
+            y: "culmen_depth_mm",
+            stroke: "species",
+            r: "body_mass_g",
+            title: (d) =>
+              `${d.species} (${d.island})\nSexe: ${d.sex ?? "Inconnu"}\nLongueur: ${d.culmen_length_mm} mm\nProfondeur: ${d.culmen_depth_mm} mm`,
+            tip: true
+          })
+        ],
+        x: {
+          label: "Longueur du bec (mm)"
+        },
+        y: {
+          label: "Profondeur du bec (mm)"
+        }
+      });
+
+      container.replaceChildren(plot);
+      updateSummary(filtered.length);
+    }
+
+    [selectSpecies, selectIsland, selectSex].forEach((element) => {
+      element.addEventListener("change", render);
+    });
+
+    render();
+
+    let resizeId;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(render, 200);
+    });
+  </script>
+</Layout>

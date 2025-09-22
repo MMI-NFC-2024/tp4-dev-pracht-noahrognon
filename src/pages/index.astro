@@ -1,21 +1,129 @@
 ---
-import PlotFigure from "../components/PlotFigure.astro";
 import Layout from "../layouts/Layout.astro";
-import * as Plot from "@observablehq/plot";
-import penguins from "../assets/penguins.json";
 ---
 
 <Layout>
-  <h1 class="text-2xl">Test Astro et Plot (Observablehq)</h1>
-  <PlotFigure
-    options={{
-      marks: [
-        Plot.dot(penguins, {
-          x: "culmen_length_mm",
-          y: "culmen_depth_mm",
-          stroke: "species",
-        }),
-      ],
-    }}
-  />
+  <section class="space-y-6">
+    <div class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Classroom TP4</p>
+      <h1 class="text-4xl font-semibold text-white">Visualisations avec Observable Plot</h1>
+      <p class="max-w-3xl text-base text-slate-300">
+        Selectionne un atelier pour tester les differentes etapes du TP : de la reprise d'un
+        exemple minimal jusqu'aux visualisations interactives basees sur les jeux de donnees
+        Penguins, Cars, Alphabet et Weather.
+      </p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <a
+        href="/plot/simple"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Plot simple</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Reprise du code "Plot in vanilla HTML" en version Astro avec Observable Plot packager.
+        </p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+
+      <a
+        href="/penguins/simple"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Penguins - Scatter</h2>
+        <p class="mt-2 text-sm text-slate-400">Visualisation des mesures du bec pour chaque espece de manchot.</p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+
+      <a
+        href="/penguins/species-filter"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Penguins - Filtre espece</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Ajoute un select sur l'espece pour filtrer dynamiquement les points du graphique.
+        </p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+
+      <a
+        href="/penguins/multi-filters"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Penguins - Filtres avances</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Combine des filtres sur l'espece, l'ile et le sexe pour creuser les donnees.
+        </p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+
+      <a
+        href="/cars"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Cars - Performance</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Compare consommation, puissance et poids en filtrant par cylindres et annee.
+        </p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+
+      <a
+        href="/alphabet"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Alphabet - Frequences</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Histogramme interactif des frequences de lettres avec tri dynamique.
+        </p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+
+      <a
+        href="/weather"
+        class="group rounded-xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-sky-500/80 hover:bg-slate-900"
+      >
+        <h2 class="text-lg font-medium text-white">Weather - Tableau</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Analyse temperature, vent et precipitations avec filtres par type de temps et par mois.
+        </p>
+        <span class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-sky-400">
+          Acceder
+          <svg class="h-3 w-3 transition group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </a>
+    </div>
+  </section>
 </Layout>

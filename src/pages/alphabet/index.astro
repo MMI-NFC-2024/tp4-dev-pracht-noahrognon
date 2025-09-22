@@ -1,0 +1,112 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="space-y-6">
+    <header class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.35em] text-sky-400">Alphabet</p>
+      <h1 class="text-3xl font-semibold text-white">Frequences des lettres</h1>
+      <p class="max-w-3xl text-sm text-slate-300">
+        Visualise les frequences relatives des lettres en anglais et choisis l'ordre d'affichage.
+      </p>
+    </header>
+
+    <div class="space-y-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6">
+      <div class="flex flex-wrap items-center gap-3 text-sm text-slate-200">
+        <label class="font-medium" for="alphabet-order">Ordre</label>
+        <select
+          id="alphabet-order"
+          class="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none"
+        >
+          <option value="frequency">Du plus frequent au moins frequent</option>
+          <option value="alphabetical">Ordre alphabetique</option>
+        </select>
+      </div>
+
+      <p id="alphabet-summary" class="text-xs uppercase tracking-widest text-slate-400"></p>
+
+      <div class="overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <div id="alphabet-plot" class="h-[420px] w-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import * as Plot from "@observablehq/plot";
+    import alphabetData from "../../assets/alphabet.json";
+
+    const orderSelect = document.querySelector("#alphabet-order");
+    const container = document.querySelector("#alphabet-plot");
+    const summary = document.querySelector("#alphabet-summary");
+
+    const letters = alphabetData.map((item) => ({
+      ...item,
+      percentage: Math.round(item.frequency * 10000) / 100
+    }));
+
+    function sortData() {
+      const mode = orderSelect.value;
+      const sorted = [...letters];
+
+      if (mode === "alphabetical") {
+        sorted.sort((a, b) => a.letter.localeCompare(b.letter));
+      } else {
+        sorted.sort((a, b) => b.frequency - a.frequency);
+      }
+
+      return sorted;
+    }
+
+    function updateSummary(sorted) {
+      if (!sorted.length) {
+        summary.textContent = "Aucune lettre";
+        return;
+      }
+
+      const top = sorted[0];
+      summary.textContent = `Lettre dominante: ${top.letter} (${top.percentage}% du corpus)`;
+    }
+
+    function render() {
+      const sorted = sortData();
+      const width = container.clientWidth || 900;
+      const domain = sorted.map((item) => item.letter);
+
+      const plot = Plot.plot({
+        width,
+        height: 400,
+        y: {
+          label: "Frequence",
+          tickFormat: (d) => `${Math.round(d * 100)}%`
+        },
+        x: {
+          label: "Lettre",
+          domain
+        },
+        marks: [
+          Plot.ruleY([0]),
+          Plot.barY(sorted, {
+            x: "letter",
+            y: "frequency",
+            fill: "letter",
+            title: (d) => `${d.letter} - ${d.percentage}%`
+          })
+        ]
+      });
+
+      container.replaceChildren(plot);
+      updateSummary(sorted);
+    }
+
+    orderSelect.addEventListener("change", render);
+
+    render();
+
+    let resizeId;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(render, 200);
+    });
+  </script>
+</Layout>
